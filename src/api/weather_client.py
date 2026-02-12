@@ -13,7 +13,16 @@ class WeatherAPIClient:
         self.api_key = api_key or os.getenv("OPENWEATHER_API_KEY")
         if not self.api_key:
             raise ValueError("OpenWeatherMap API Key is required")
-        self.client = httpx.AsyncClient(timeout=10.0)
+        self._client: Optional[httpx.AsyncClient] = None
+
+    @property
+    def client(self) -> httpx.AsyncClient:
+        if self._client is None:
+            self._client = httpx.AsyncClient(timeout=10.0)
+        return self._client
+
+    def set_client(self, client: httpx.AsyncClient):
+        self._client = client
 
     async def get_location_coords(self, city: str, country: Optional[str] = None) -> List[Dict[str, Any]]:
         """Fetch coordinates for a city name."""
