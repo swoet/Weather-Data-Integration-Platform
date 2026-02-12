@@ -110,68 +110,60 @@ function App() {
     }
 
     return (
-        <div className="container animate-fade-in">
-            {/* Header */}
-            <header className="flex justify-between items-center mb-12">
+        <div className="container">
+            {/* Header Section */}
+            <header className="flex justify-between items-end mb-16">
                 <div>
-                    <h1 className="text-4xl text-primary mb-2">WeatherDesk</h1>
-                    <p className="text-muted">Premium Weather Integration Platform</p>
+                    <h1>WeatherDesk</h1>
+                    <p className="subtitle">NYC Integration / Core System</p>
                 </div>
 
-                <form onSubmit={handleAddLocation} className="flex gap-2">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted w-4 h-4" />
-                        <input
-                            type="text"
-                            placeholder="Add city (e.g. London)..."
-                            className="pl-10 w-64"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            disabled={loading}
-                        />
-                    </div>
-                    <button type="submit" className="btn-primary flex items-center gap-2" disabled={loading}>
-                        <Plus className="w-5 h-5" />
-                        Add City
+                <form onSubmit={handleAddLocation} className="search-container">
+                    <input
+                        type="text"
+                        placeholder="Search city code..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        disabled={loading}
+                    />
+                    <button type="submit" className="btn-primary" disabled={loading}>
+                        Add Location
                     </button>
                 </form>
             </header>
 
-            <div className="grid lg:grid-cols-12 gap-8">
-                {/* Locations List */}
-                <aside className="lg:col-span-4 flex flex-col gap-4">
-                    <h2 className="text-xl px-2">Managed Locations</h2>
-                    <div className="flex flex-col gap-3">
+            <div className="flex gap-4 grid-layout" style={{ display: 'flex', gap: '3rem' }}>
+                {/* Sidebar / Managed Locations */}
+                <aside className="sidebar" style={{ width: '300px', flexShrink: 0 }}>
+                    <p className="metric-label px-2">Managed Locations</p>
+                    <div className="flex flex-col">
                         {locations.length === 0 && (
-                            <div className="glass-card p-6 text-center text-muted">
-                                No locations tracked yet. Add one above!
+                            <div className="card text-center text-muted" style={{ borderStyle: 'dashed' }}>
+                                System empty.
                             </div>
                         )}
                         {locations.map((loc) => (
                             <div
                                 key={loc.id}
-                                className={`glass-card p-4 flex justify-between items-center cursor-pointer ${selectedLocation?.location.id === loc.id ? 'border-primary bg-bg-secondary' : ''}`}
+                                className={`location-item ${selectedLocation?.location.id === loc.id ? 'active' : ''}`}
                                 onClick={() => handleViewWeather(loc)}
                             >
-                                <div className="flex items-center gap-3">
-                                    <MapPin className={`w-5 h-5 ${loc.is_favorite ? 'text-warning' : 'text-muted'}`} />
-                                    <div>
-                                        <h3 className="font-semibold">{loc.display_name}</h3>
-                                        <p className="text-sm text-muted">{loc.country}</p>
-                                    </div>
+                                <div>
+                                    <h3 className="font-bold" style={{ fontSize: '1rem' }}>{loc.display_name}</h3>
+                                    <p className="text-muted" style={{ fontSize: '0.75rem' }}>{loc.country}</p>
                                 </div>
-                                <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+                                <div className="flex gap-4" onClick={(e) => e.stopPropagation()}>
                                     <button
-                                        className={`btn-icon ${loc.is_favorite ? 'text-warning' : ''}`}
+                                        className="btn-icon"
                                         onClick={() => handleToggleFavorite(loc)}
                                     >
-                                        <Star className={`w-5 h-5 ${loc.is_favorite ? 'fill-warning' : ''}`} />
+                                        <Star className={`w-4 h-4 ${loc.is_favorite ? 'fill-current text-black dark:text-white' : ''}`} />
                                     </button>
                                     <button
-                                        className="btn-icon text-muted hover:text-danger"
+                                        className="btn-icon"
                                         onClick={() => handleDeleteLocation(loc.id)}
                                     >
-                                        <Trash2 className="w-5 h-5" />
+                                        <Trash2 className="w-4 h-4" />
                                     </button>
                                 </div>
                             </div>
@@ -179,111 +171,83 @@ function App() {
                     </div>
                 </aside>
 
-                {/* Weather Dashboard */}
-                <main className="lg:col-span-8">
+                {/* Dashboard Display */}
+                <main style={{ flex: 1 }}>
                     {!selectedLocation ? (
-                        <div className="glass-card h-[400px] flex flex-col items-center justify-center text-center p-8">
-                            <div className="w-20 h-20 bg-bg-secondary rounded-full flex items-center justify-center mb-4">
-                                <Calendar className="w-10 h-10 text-muted" />
+                        <div className="dashboard-main flex items-center justify-center text-center" style={{ minHeight: '400px', display: 'flex' }}>
+                            <div>
+                                <Calendar className="w-12 h-12 mb-4 mx-auto text-muted" />
+                                <h3 className="text-muted">Select location to view system metrics.</h3>
                             </div>
-                            <h2 className="text-2xl mb-2">Select a Location</h2>
-                            <p className="text-muted max-w-sm">
-                                Choose a city from the list to view real-time weather metrics and 5-day forecasts.
-                            </p>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-6">
-                            {/* Current Weather Card */}
-                            <div className="glass-card p-8">
-                                <div className="flex justify-between items-start mb-8">
-                                    <div>
-                                        <h2 className="text-4xl font-bold mb-1">{selectedLocation.location.display_name}</h2>
-                                        <p className="text-muted flex items-center gap-1">
-                                            {selectedLocation.location.country} • {selectedLocation.last_synced ? `Last synced: ${format(new Date(selectedLocation.last_synced), 'HH:mm')}` : 'Never synced'}
-                                        </p>
-                                    </div>
-                                    <button
-                                        className={`btn-primary flex items-center gap-2 ${syncing === selectedLocation.location.id ? 'opacity-50' : ''}`}
-                                        onClick={() => handleSyncWeather(selectedLocation.location.id)}
-                                        disabled={syncing !== null}
-                                    >
-                                        <RefreshCw className={`w-4 h-4 ${syncing === selectedLocation.location.id ? 'animate-spin' : ''}`} />
-                                        Sync Now
-                                    </button>
+                        <div className="dashboard-main">
+                            <header className="flex justify-between items-start mb-12" style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <div>
+                                    <h2 className="text-4xl font-bold">{selectedLocation.location.display_name}</h2>
+                                    <p className="text-muted" style={{ fontSize: '0.8rem' }}>
+                                        {selectedLocation.location.latitude.toFixed(4)}, {selectedLocation.location.longitude.toFixed(4)} /
+                                        {selectedLocation.last_synced ? ` Last Sync: ${format(new Date(selectedLocation.last_synced), 'HH:mm:ss')}` : ' No Data'}
+                                    </p>
                                 </div>
+                                <button
+                                    className="btn-primary"
+                                    onClick={() => handleSyncWeather(selectedLocation.location.id)}
+                                    disabled={syncing !== null}
+                                >
+                                    <RefreshCw className={`w-4 h-4 mr-2 ${syncing === selectedLocation.location.id ? 'animate-spin' : ''}`} />
+                                    {syncing === selectedLocation.location.id ? 'Syncing...' : 'Refresh'}
+                                </button>
+                            </header>
 
-                                {!selectedLocation.current ? (
-                                    <div className="text-center p-12 bg-bg-primary/30 rounded-xl">
-                                        <p className="text-muted mb-4">No data available yet. Please sync to fetch the latest weather.</p>
-                                        <button className="btn-primary" onClick={() => handleSyncWeather(selectedLocation.location.id)}>Initialize Sync</button>
+                            {!selectedLocation.current ? (
+                                <div className="text-center py-20 bg-bg-secondary">
+                                    <p className="text-muted mb-6">Local cache empty. Force sync required.</p>
+                                    <button className="btn-primary" onClick={() => handleSyncWeather(selectedLocation.location.id)}>Sync Cache</button>
+                                </div>
+                            ) : (
+                                <>
+                                    <div className="flex items-center gap-12" style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
+                                        <span className="temp-large">{Math.round(selectedLocation.current.temperature)}°</span>
+                                        <div className="flex flex-col">
+                                            <p className="font-bold underline uppercase" style={{ letterSpacing: '0.1em' }}>{selectedLocation.current.weather_main}</p>
+                                            <p className="text-muted capitalize">{selectedLocation.current.weather_description}</p>
+                                        </div>
                                     </div>
-                                ) : (
-                                    <>
-                                        <div className="flex items-center gap-8 mb-8">
-                                            <div className="flex items-center">
-                                                <img
-                                                    src={getWeatherIcon(selectedLocation.current.weather_icon)}
-                                                    alt={selectedLocation.current.weather_main}
-                                                    className="w-32 h-32 -ml-4"
-                                                />
-                                                <div>
-                                                    <span className="text-6xl font-bold">{Math.round(selectedLocation.current.temperature)}°C</span>
-                                                    <p className="text-xl text-muted capitalize">{selectedLocation.current.weather_description}</p>
-                                                </div>
-                                            </div>
 
-                                            <div className="grid grid-cols-2 gap-x-12 gap-y-4 ml-auto">
-                                                <div className="flex items-center gap-3">
-                                                    <Thermometer className="w-5 h-5 text-primary" />
-                                                    <div>
-                                                        <p className="text-xs text-muted uppercase">Feels Like</p>
-                                                        <p className="font-semibold">{Math.round(selectedLocation.current.feels_like)}°C</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <Droplets className="w-5 h-5 text-primary" />
-                                                    <div>
-                                                        <p className="text-xs text-muted uppercase">Humidity</p>
-                                                        <p className="font-semibold">{selectedLocation.current.humidity}%</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <Wind className="w-5 h-5 text-primary" />
-                                                    <div>
-                                                        <p className="text-xs text-muted uppercase">Wind Speed</p>
-                                                        <p className="font-semibold">{selectedLocation.current.wind_speed} m/s</p>
-                                                    </div>
-                                                </div>
-                                                <div className="flex items-center gap-3">
-                                                    <div className="w-5 h-5 rounded-full border-2 border-primary flex items-center justify-center text-[10px] font-bold text-primary">P</div>
-                                                    <div>
-                                                        <p className="text-xs text-muted uppercase">Pressure</p>
-                                                        <p className="font-semibold">{selectedLocation.current.pressure} hPa</p>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    <div className="metric-grid">
+                                        <div className="metric-item">
+                                            <span className="metric-label">Feels Like</span>
+                                            <span className="metric-value">{Math.round(selectedLocation.current.feels_like)}°C</span>
                                         </div>
+                                        <div className="metric-item">
+                                            <span className="metric-label">Humidity</span>
+                                            <span className="metric-value">{selectedLocation.current.humidity}%</span>
+                                        </div>
+                                        <div className="metric-item">
+                                            <span className="metric-label">Wind</span>
+                                            <span className="metric-value">{selectedLocation.current.wind_speed} m/s</span>
+                                        </div>
+                                        <div className="metric-item">
+                                            <span className="metric-label">Pressure</span>
+                                            <span className="metric-value">{selectedLocation.current.pressure} hPa</span>
+                                        </div>
+                                    </div>
 
-                                        {/* Forecast Section */}
-                                        <div className="border-t border-glass-border pt-8">
-                                            <h3 className="text-lg mb-6 flex items-center gap-2">
-                                                <Calendar className="w-5 h-5 text-primary" />
-                                                5-Day Forecast
-                                            </h3>
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                                                {selectedLocation.forecast?.filter((_, i) => i % 8 === 0).map((item) => (
-                                                    <div key={item.forecast_timestamp} className="bg-bg-primary/40 rounded-xl p-4 text-center border border-glass-border">
-                                                        <p className="text-xs text-muted mb-1">{format(new Date(item.forecast_timestamp * 1000), 'EEE, MMM d')}</p>
-                                                        <img src={getWeatherIcon(item.weather_icon)} alt={item.weather_main} className="w-12 h-12 mx-auto" />
-                                                        <p className="font-bold">{Math.round(item.temperature)}°C</p>
-                                                        <p className="text-[10px] text-muted capitalize truncate">{item.weather_description}</p>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                    <div className="forecast-container">
+                                        <p className="metric-label" style={{ marginBottom: '1rem' }}>5-Day Forecast Projection</p>
+                                        <div className="forecast-grid">
+                                            {selectedLocation.forecast?.filter((_, i) => i % 8 === 0).map((item) => (
+                                                <div key={item.forecast_timestamp} className="forecast-item">
+                                                    <p className="forecast-day">{format(new Date(item.forecast_timestamp * 1000), 'EEE')}</p>
+                                                    <p className="forecast-temp">{Math.round(item.temperature)}°</p>
+                                                    <p className="text-muted" style={{ fontSize: '0.65rem', textTransform: 'uppercase' }}>{item.weather_main}</p>
+                                                </div>
+                                            ))}
                                         </div>
-                                    </>
-                                )}
-                            </div>
+                                    </div>
+                                </>
+                            )}
                         </div>
                     )}
                 </main>
