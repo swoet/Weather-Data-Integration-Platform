@@ -72,15 +72,3 @@ A modern, full-stack weather application that integrates with OpenWeatherMap API
   - `main.py`: Route definitions and app initialization.
 - **Frontend State**: Managed with React hooks for simplicity and performance.
 
-## Assumptions
-
-- The user only needs weather data for one city at a time but can track multiple cities.
-- Units default to Metric (Celsius, m/s).
-- The "Free Tier" of OpenWeatherMap is being used (60 calls/minute limit).
-
-## Future Improvements
-
-- Background synchronization using a task queue (e.g., Celery or APScheduler).
-- Caching layer (Redis) to further minimize API calls.
-- User authentication and multi-user support.
-- Unit testing for the frontend components.
