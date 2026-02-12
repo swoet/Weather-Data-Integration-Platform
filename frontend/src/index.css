@@ -3,19 +3,19 @@
   --font-heading: 'Outfit', sans-serif;
 
   /* NYC Minimalist Palette (Monochrome) */
-  --bg-primary: #ffffff;
-  --bg-secondary: #f8f9fa;
-  --bg-tertiary: #f1f3f5;
+  --bg-primary: #0d0d0d;
+  --bg-secondary: #090909;
+  --bg-tertiary: #09090a;
 
-  --text-primary: #121212;
-  --text-secondary: #495057;
-  --text-muted: #868e96;
+  --text-primary: #faf5f5;
+  --text-secondary: #f6faff;
+  --text-muted: #505254;
 
-  --border-primary: #e9ecef;
-  --border-heavy: #212529;
+  --border-primary: #dee3e9;
+  --border-heavy: #f4f8fd;
 
-  --color-accent: #000000;
-  --color-accent-inverse: #ffffff;
+  --color-accent: #575555;
+  --color-accent-inverse: #121111;
 
   --radius-sm: 4px;
   --radius-md: 8px;
@@ -33,9 +33,9 @@
     --bg-secondary: #121212;
     --bg-tertiary: #1a1a1a;
 
-    --text-primary: #ffffff;
-    --text-secondary: #adb5bd;
-    --text-muted: #6c757d;
+    --text-primary: #343232;
+    --text-secondary: #080808;
+    --text-muted: #070808;
 
     --border-primary: #2c2c2c;
     --border-heavy: #ffffff;
