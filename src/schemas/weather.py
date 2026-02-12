@@ -61,10 +61,13 @@ class ForecastItem(BaseModel):
 
 class WeatherData(BaseModel):
     location: Location
-    current: Optional[WeatherSnapshot]
-    forecast: Optional[List[ForecastItem]]
-    last_synced: Optional[datetime]
+    current: Optional[WeatherSnapshot] = None
+    forecast: Optional[List[ForecastItem]] = None
+    last_synced: Optional[datetime] = None
 
-class UserPreference(BaseModel):
+class Preference(BaseModel):
     key: str
+    value: str
+
+class PreferenceUpdate(BaseModel):
     value: str

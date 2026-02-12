@@ -74,10 +74,15 @@ class WeatherService:
         if not location:
             raise ValueError("Location not found")
         
+        # Get units preference
+        cursor = self.db.execute("SELECT value FROM user_preferences WHERE key = 'units'")
+        row = cursor.fetchone()
+        units = row["value"] if row else "metric"
+        
         try:
             # Fetch current and forecast
-            current = await self.api_client.get_current_weather(location.latitude, location.longitude)
-            forecast = await self.api_client.get_forecast(location.latitude, location.longitude)
+            current = await self.api_client.get_current_weather(location.latitude, location.longitude, units=units)
+            forecast = await self.api_client.get_forecast(location.latitude, location.longitude, units=units)
             
             # Store current weather
             self.db.execute("""
@@ -152,3 +157,14 @@ class WeatherService:
         """, (location_id,))
         row = cursor.fetchone()
         return row["synced_at"] if row else None
+
+    def get_preferences(self) -> List[dict]:
+        cursor = self.db.execute("SELECT key, value FROM user_preferences")
+        return [dict(row) for row in cursor.fetchall()]
+
+    def update_preference(self, key: str, value: str):
+        self.db.execute(
+            "UPDATE user_preferences SET value = ?, updated_at = CURRENT_TIMESTAMP WHERE key = ?",
+            (value, key)
+        )
+        self.db.commit()

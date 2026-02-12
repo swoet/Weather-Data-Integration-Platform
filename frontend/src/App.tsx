@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Plus, Search, RefreshCw, Star, Trash2, MapPin, Wind, Droplets, Thermometer, Calendar, Cloud, CloudRain, Sun, CloudSnow, CloudLightning, ChevronRight } from 'lucide-react'
+import { Plus, Search, RefreshCw, Star, Trash2, MapPin, Wind, Droplets, Thermometer, Calendar, Cloud, CloudRain, Sun, CloudSnow, CloudLightning, ChevronRight, Settings } from 'lucide-react'
 import { format } from 'date-fns'
 import type { Location, WeatherData } from './types/weather'
 import './index.css'
@@ -10,10 +10,42 @@ function App() {
     const [searchQuery, setSearchQuery] = useState('')
     const [loading, setLoading] = useState(false)
     const [syncing, setSyncing] = useState<number | null>(null)
+    const [preferences, setPreferences] = useState<{ [key: string]: string }>({ units: 'metric' })
+    const [showSettings, setShowSettings] = useState(false)
 
     useEffect(() => {
         fetchLocations()
+        fetchPreferences()
     }, [])
+
+    const fetchPreferences = async () => {
+        try {
+            const response = await fetch('/api/preferences')
+            const data = await response.json()
+            const prefs: { [key: string]: string } = {}
+            data.forEach((p: any) => prefs[p.key] = p.value)
+            setPreferences(prefs)
+        } catch (error) {
+            console.error('Failed to fetch preferences:', error)
+        }
+    }
+
+    const handleUpdatePreference = async (key: string, value: string) => {
+        try {
+            await fetch(`/api/preferences/${key}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ value })
+            })
+            setPreferences(prev => ({ ...prev, [key]: value }))
+            // Refetch weather if a location is selected to update units
+            if (selectedLocation) {
+                handleViewWeather(selectedLocation.location)
+            }
+        } catch (error) {
+            console.error('Failed to update preference:', error)
+        }
+    }
 
     const fetchLocations = async () => {
         try {
@@ -172,18 +204,48 @@ function App() {
                     <p className="subtitle">NYC Integration / Core System</p>
                 </div>
 
-                <form onSubmit={handleAddLocation} className="search-container">
-                    <input
-                        type="text"
-                        placeholder="Search city code..."
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        disabled={loading}
-                    />
-                    <button type="submit" className="btn-primary" disabled={loading}>
-                        Add Location
-                    </button>
-                </form>
+                <div className="flex items-center gap-6">
+                    <form onSubmit={handleAddLocation} className="search-container">
+                        <input
+                            type="text"
+                            placeholder="Search city code..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            disabled={loading}
+                        />
+                        <button type="submit" className="btn-primary" disabled={loading}>
+                            Add Location
+                        </button>
+                    </form>
+
+                    <div className="relative">
+                        <button
+                            className={`btn-icon ${showSettings ? 'bg-bg-tertiary' : ''}`}
+                            onClick={() => setShowSettings(!showSettings)}
+                        >
+                            <Settings className="w-5 h-5" />
+                        </button>
+
+                        {showSettings && (
+                            <div className="card absolute right-0 mt-2 w-48 z-50 shadow-lg" style={{ background: 'var(--bg-primary)', borderStyle: 'solid' }}>
+                                <p className="metric-label mb-2">SYSTEM PREFERENCES</p>
+                                <div className="flex flex-col gap-2">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span>Units</span>
+                                        <select
+                                            value={preferences.units}
+                                            onChange={(e) => handleUpdatePreference('units', e.target.value)}
+                                            className="bg-bg-secondary border-none text-[10px] uppercase p-1 outline-none"
+                                        >
+                                            <option value="metric">Metric (°C)</option>
+                                            <option value="imperial">Imperial (°F)</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </div>
             </header>
 
             <div className="flex gap-4 grid-layout" style={{ display: 'flex', gap: '3rem' }}>
@@ -277,7 +339,12 @@ function App() {
                                     <div className="flex items-center gap-12" style={{ display: 'flex', alignItems: 'center', gap: '3rem' }}>
                                         <div className="flex flex-col items-center">
                                             {getWeatherIcon(selectedLocation.current.weather_main)}
-                                            <span className="temp-large mt-4">{Math.round(selectedLocation.current.temperature)}°</span>
+                                            <span className="temp-large mt-4">
+                                                {Math.round(selectedLocation.current.temperature)}°
+                                                <span style={{ fontSize: '1.5rem', verticalAlign: 'top' }}>
+                                                    {preferences.units === 'metric' ? 'C' : 'F'}
+                                                </span>
+                                            </span>
                                         </div>
                                         <div className="flex flex-col">
                                             <p className="font-bold underline uppercase" style={{ letterSpacing: '0.2em', fontSize: '1.2rem' }}>{selectedLocation.current.weather_main}</p>
@@ -292,7 +359,7 @@ function App() {
                                     <div className="metric-grid">
                                         <div className="metric-item">
                                             <span className="metric-label">FEELS LIKE</span>
-                                            <span className="metric-value">{Math.round(selectedLocation.current.feels_like)}°C</span>
+                                            <span className="metric-value">{Math.round(selectedLocation.current.feels_like)}°{preferences.units === 'metric' ? 'C' : 'F'}</span>
                                         </div>
                                         <div className="metric-item">
                                             <span className="metric-label">HUMIDITY</span>

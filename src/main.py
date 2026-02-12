@@ -13,7 +13,8 @@ from typing import List, Optional
 from src.db.database import get_db, Database
 from src.schemas.weather import (
     Location, LocationCreate, LocationUpdate, 
-    WeatherSnapshot, ForecastItem, WeatherData
+    WeatherSnapshot, ForecastItem, WeatherData,
+    Preference, PreferenceUpdate
 )
 from src.api.weather_client import WeatherAPIClient
 from src.services.weather_service import WeatherService
@@ -22,7 +23,16 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = FastAPI(title="Weather Data Integration Platform")
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Initialize DB schema
+    db = get_db()
+    db.initialize_schema()
+    yield
+
+app = FastAPI(title="Weather Data Integration Platform", lifespan=lifespan)
 
 # CORS middleware
 app.add_middleware(
@@ -43,10 +53,6 @@ def get_weather_service(db: Database = Depends(get_db)):
     client = WeatherAPIClient(api_key=API_KEY)
     return WeatherService(db, client)
 
-@app.on_event("startup")
-async def startup():
-    db = get_db()
-    db.initialize_schema()
 
 @app.post("/locations", response_model=Location)
 async def create_location(
@@ -133,6 +139,19 @@ async def get_weather_data(
         forecast=forecast,
         last_synced=last_synced
     )
+
+@app.get("/preferences", response_model=List[Preference])
+async def get_preferences(service: WeatherService = Depends(get_weather_service)):
+    return service.get_preferences()
+
+@app.patch("/preferences/{key}", response_model=dict)
+async def update_preference(
+    key: str, 
+    update: PreferenceUpdate, 
+    service: WeatherService = Depends(get_weather_service)
+):
+    service.update_preference(key, update.value)
+    return {"status": "updated", "key": key, "value": update.value}
 
 if __name__ == "__main__":
     import uvicorn
