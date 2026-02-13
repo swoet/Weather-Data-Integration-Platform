@@ -72,10 +72,33 @@ class WeatherService:
         self.db.commit()
         return cursor.rowcount > 0
 
-    async def sync_weather(self, location_id: int) -> Tuple[WeatherSnapshot, List[ForecastItem]]:
+    async def sync_weather(self, location_id: int, force: bool = False) -> Tuple[WeatherSnapshot, List[ForecastItem]]:
         location = self.get_location(location_id)
         if not location:
             raise ValueError("Location not found")
+        
+        # Check cache freshness (unless force refresh is requested)
+        if not force:
+            last_sync = self.get_last_sync_time(location_id)
+            if last_sync:
+                from datetime import datetime, timezone
+                import os
+                
+                # Get cache duration from environment (default: 10 minutes)
+                cache_duration_minutes = int(os.getenv("CACHE_DURATION_MINUTES", "10"))
+                
+                # Calculate age of cached data
+                now = datetime.now(timezone.utc)
+                age_minutes = (now - last_sync.replace(tzinfo=timezone.utc)).total_seconds() / 60
+                
+                # If cache is fresh, return cached data without API call
+                if age_minutes < cache_duration_minutes:
+                    current = self.get_latest_weather(location_id)
+                    forecast = self.get_forecast(location_id)
+                    
+                    # Return cached data if both exist
+                    if current and forecast:
+                        return current, forecast
         
         # Get units preference
         cursor = self.db.execute("SELECT value FROM user_preferences WHERE key = 'units'")
@@ -83,7 +106,7 @@ class WeatherService:
         units = row["value"] if row else "metric"
         
         try:
-            # Fetch current and forecast
+            # Fetch current and forecast from API
             current = await self.api_client.get_current_weather(location.latitude, location.longitude, units=units)
             forecast = await self.api_client.get_forecast(location.latitude, location.longitude, units=units)
             

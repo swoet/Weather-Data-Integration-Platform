@@ -102,11 +102,12 @@ async def delete_location(
 
 @app.post("/locations/{location_id}/sync", response_model=WeatherData)
 async def sync_weather(
-    location_id: int, 
+    location_id: int,
+    force: bool = False,  # Query parameter to force refresh (bypass cache)
     service: WeatherService = Depends(get_weather_service)
 ):
     try:
-        current, forecast = await service.sync_weather(location_id)
+        current, forecast = await service.sync_weather(location_id, force=force)
         location = service.get_location(location_id)
         if not location:
             raise HTTPException(status_code=404, detail="Location record missing after sync")
