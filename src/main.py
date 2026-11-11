@@ -37,16 +37,19 @@ app = FastAPI(title="Weather Data Integration Platform", lifespan=lifespan)
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify exact origins
+    allow_origins=os.getenv("ALLOWED_ORIGINS", "http://localhost:5173").split(","),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# API Key check
+# API Key check — fail fast so misconfigured deployments are obvious immediately
 API_KEY = os.getenv("OPENWEATHER_API_KEY")
 if not API_KEY:
-    print("Warning: OPENWEATHER_API_KEY not found in environment variables.")
+    raise RuntimeError(
+        "OPENWEATHER_API_KEY is not set. "
+        "Create a .env file with OPENWEATHER_API_KEY=<your_key> and restart."
+    )
 
 # Dependency injection for services
 def get_weather_service(db: Database = Depends(get_db)):
